@@ -4,6 +4,7 @@ import { Button } from 'react-native-paper';
 import { TimePickerModal } from 'react-native-paper-dates';
 import { Picker } from '@react-native-picker/picker';
 import WeekSelector from 'react-native-week-selector';
+import AsyncStorage from '@react-native-community/async-storage';
 import "intl";
 import "intl/locale-data/jsonp/en";
 import { DatabaseConnection } from '../components/database-connection';
@@ -16,6 +17,7 @@ const db = DatabaseConnection.getConnection();
   const selectDate = new Date();
   const [currentDate, setCurrentDate] = React.useState('');
 
+  const [dayoftheWeek, setDayoftheWeek] = React.useState('');
   const [projNum, setprojNum] = React.useState('');
   const [siteID, setsiteID] = React.useState('')
   
@@ -104,15 +106,15 @@ const db = DatabaseConnection.getConnection();
   }
 
   const renderUserNames = () => {
-    if(projNum=='VOD103015'){
-      return [<Picker.Item key="uniqueID8" label="CE005 ~ Woodcock Hill" value="VOD103015 1" />,
-             <Picker.Item key="uniqueID7" label="CE006 ~ Crusheen knocknamucky" value="VOD103015 2" />,
-            <Picker.Item key="uniqueID6" label="CE007 ~ Lack West" value="VOD103015 3" />,
-            <Picker.Item key="uniqueID5" label="CE008 ~ Dangan Ballyvaughan" value="VOD103015 4" />,
-            <Picker.Item key="uniqueID4" label="CE009 ~ Glenagall" value="VOD103015 5" />]
+    if(projNum=='VOD103015 ~ Assure Provide engsupport Oct 1st to Oct 31st 2019'){
+      return [<Picker.Item key="uniqueID8" label="CE005 ~ Woodcock Hill" value="CE005 ~ Woodcock Hill" />,
+             <Picker.Item key="uniqueID7" label="CE006 ~ Crusheen knocknamucky" value="CE006 ~ Crusheen knocknamucky" />,
+            <Picker.Item key="uniqueID6" label="CE007 ~ Lack West" value="CE007 ~ Lack West" />,
+            <Picker.Item key="uniqueID5" label="CE008 ~ Dangan Ballyvaughan" value="CE008 ~ Dangan Ballyvaughan" />,
+            <Picker.Item key="uniqueID4" label="CE009 ~ Glenagall" value="CE009 ~ Glenagall" />]
      }
    
-     else if(projNum=='ABO101597'){
+     else if(projNum=='ABO101597 ~ Over head Line works Cluster 1 ~ CLS001 ~ Cluster1 OHL'){
        return [<Picker.Item key="uniqueID3" label="CLS001 ~ Cluster 1 OHL" value="ABO101597 1" />
              ]
       }
@@ -123,6 +125,78 @@ const db = DatabaseConnection.getConnection();
        }
 
   }
+
+  const save = async() => {
+
+    try{
+      await AsyncStorage.setItem("Week Ending", selectedWeek),
+      await AsyncStorage.setItem("Days", dayoftheWeek),
+      await AsyncStorage.setItem("ProjectNumber", projNum)
+      await AsyncStorage.setItem("SiteID", siteID)
+    }
+    catch(err)
+    {
+      alert(err)
+    }
+  };
+  
+  const loadn = async() => {
+  
+    try{
+      let selectedWeek = await AsyncStorage.getItem("Week Ending");
+      let dayoftheWeek = await AsyncStorage.getItem("Days");
+      let projNum = await AsyncStorage.getItem("ProjectNumber");
+      let siteID = await AsyncStorage.getItem("Site ID")
+  
+      if(selectedWeek !== null){
+        setselectedWeek(selectedWeek)
+      }
+     
+      if(dayoftheWeek !== null){
+        setDayoftheWeek(dayoftheWeek)
+      } 
+      if(projNum !== null){
+        setprojNum(projNum)
+      }
+
+      if(siteID !== null){
+        setsiteID(siteID)
+      }
+    }
+    catch(err)
+    {
+      alert(err)
+    }
+  };
+  
+  const remove = async() => {
+  
+    try{
+      await AsyncStorage.removeItem("ProjectNumber")
+      } catch(err)
+    {
+      alert(err)
+    }finally{
+      setprojNum("")
+    }
+  };
+  
+  React.useEffect(() => {
+    loadn();
+  
+  },[]);
+  
+
+  const UpdateContent = async () => {
+    try {
+    alert("Success");
+    save();
+    loadn()
+    add_entry();
+    } catch (error) {
+    alert(error.message);
+    }  
+}
 
   React.useEffect(() => {
     var date = new Date().getDate(); //Current Date
@@ -142,7 +216,7 @@ const db = DatabaseConnection.getConnection();
   console.log(dateTime);*/
 
   const add_entry = () => {
-    console.log( selectedWeek, currentDate, 'VOD103015', description, Hours, Minutes, finishHours, finishMinutes, LunchHours, LunchMinutes,  finishLunchHours, finishLunchMinutes,  0, 'ce005');
+    console.log( selectedWeek, currentDate, projNum, description, Hours, Minutes, finishHours, finishMinutes, LunchHours, LunchMinutes,  finishLunchHours, finishLunchMinutes,  0, siteID);
 
     db.transaction(function (tx) {
       tx.executeSql(
@@ -185,79 +259,29 @@ const db = DatabaseConnection.getConnection();
           />
           </View>
 
-          <View style={styles.section}>
-            <TimePickerModal
-        visible={visible}
-        onDismiss={onDismiss}
-        onConfirm={onConfirm}
-        hours={12} // default: current hours
-        minutes={14} // default: current minutes
-        label="Select time" // optional, default 'Select time'
-        cancelLabel="Cancel" // optional, default: 'Cancel'
-        confirmLabel="Ok" // optional, default: 'Ok'
-        animationType="fade" // optional, default is 'none'
-        locale={'en'} // optional, default is automically detected by your system
-      />
-      <Button icon="walk" onPress={()=> setVisible(true)}>
-        Start time : {Hours}:{Minutes}
-      </Button>
-
-      <TimePickerModal
-        visible={finishvisible}
-        onDismiss={onFinishDismiss}
-        onConfirm={onFinishConfirm}
-        hours={12} // default: current hours
-        minutes={14} // default: current minutes
-        label="Select time" // optional, default 'Select time'
-        cancelLabel="Cancel" // optional, default: 'Cancel'
-        confirmLabel="Ok" // optional, default: 'Ok'
-        animationType="fade" // optional, default is 'none'
-        locale={'en'} // optional, default is automically detected by your system
-      />
-      <Button icon="run" onPress={()=> setfinishVisible(true)}>
-        Finish time : {finishHours}:{finishMinutes}
-      </Button>
-      
-      <TimePickerModal
-        visible={Lvisible}
-        onDismiss={onLDismiss}
-        onConfirm={onLConfirm}
-        hours={12} // default: current hours
-        minutes={14} // default: current minutes
-        label="Select time" // optional, default 'Select time'
-        cancelLabel="Cancel" // optional, default: 'Cancel'
-        confirmLabel="Ok" // optional, default: 'Ok'
-        animationType="fade" // optional, default is 'none'
-        locale={'en'} // optional, default is automically detected by your system
-      />
-           <Button icon="food" onPress={()=> setLVisible(true)}>
-        Start Lunch : {LunchHours}:{LunchMinutes}
-      </Button>
-
-      <TimePickerModal
-        visible={Lfinishvisible}
-        onDismiss={onLFinishDismiss}
-        onConfirm={onLFinishConfirm}
-        hours={12} // default: current hours
-        minutes={14} // default: current minutes
-        label="Select time" // optional, default 'Select time'
-        cancelLabel="Cancel" // optional, default: 'Cancel'
-        confirmLabel="Ok" // optional, default: 'Ok'
-        animationType="fade" // optional, default is 'none'
-        locale={'en'} // optional, default is automically detected by your system
-      />
-      <Button icon="food" onPress={()=> setLfinishVisible(true)}>
-        Finish Lunch : {finishLunchHours}:{finishLunchMinutes}
-      </Button>
-
-      <TextInput
-      placeholder="  Description"
-      onChangeText={description => setDescription(description)} 
-      defaultValue={description}
-      style={styles.input}
-      />
-
-<View style={styles.btn}>
+          
+          <View>
+                    <Text>
+                        Day of the Week 
+                    </Text>
+                   <Picker style={styles.datefive}
+                    selectedValue={dayoftheWeek}
+                    onValueChange=
+                    {
+                        (itemValue, itemIndex) => setDayoftheWeek(itemValue)
+                    }>
+                            <Picker.Item label="Monday" value="monday" />
+                            <Picker.Item label="Tuesday" value="tuesday" />
+                            <Picker.Item label="Wednesday" value="wednesday" />
+                            <Picker.Item label="Thursday" value="thursday" />
+                            <Picker.Item label="Friday" value="friday" />
+                            <Picker.Item label="Saturday" value="saturday" />
+                            <Picker.Item label="Sunday" value="sunday" />
+                           
+                            </Picker>
+                            </View>
+  
+          <View style={styles.btn}>
             <View style={{ flexDirection: 'row' }}>
               <Text style={styles.titleStyle}>Project No</Text>
               <View style={styles.pickerStyle}>
@@ -269,15 +293,15 @@ const db = DatabaseConnection.getConnection();
                           setprojNum(itemValue)
                       }>
                       <Picker.Item key="uniqueID9" label="Please Select" value="" />
-                      <Picker.Item key="uniqueID10" label="VOD103015 ~ Assure Provide engsupport Oct 1st to Oct 31st 2019" value="VOD103015" />
-                      <Picker.Item key="uniqueID11" label="ABO101597 ~ Over head Line works Cluster 1 ~ CLS001 ~ Cluster1 OHL" value="ABO101597" />
+                      <Picker.Item key="uniqueID10" label="VOD103015 ~ Assure Provide engsupport Oct 1st to Oct 31st 2019" value="VOD103015 ~ Assure Provide engsupport Oct 1st to Oct 31st 2019" />
+                      <Picker.Item key="uniqueID11" label="ABO101597 ~ Over head Line works Cluster 1 ~ CLS001 ~ Cluster1 OHL" value="ABO101597 ~ Over head Line works Cluster 1 ~ CLS001 ~ Cluster1 OHL" />
                       <Picker.Item key="uniqueID12" label="Client" value="Client" />
                   </Picker>}
               </View>
           </View>
           <View style={{ flexDirection: 'row' }}>
-              <Text style={styles.titleStyle}>Name</Text>
-              <View style={styles.pickerStyle}>
+              <Text style={styles.titleStyle}>Site ID</Text>
+              <View style={styles.pickerStyle2}>
                   {<Picker
                       mode='dropdown'
                       selectedValue={siteID}
@@ -293,8 +317,83 @@ const db = DatabaseConnection.getConnection();
           </View>
          </View>
 
-      <Button onPress={add_entry}>
-              Submit
+
+          <View style={styles.section}>
+            <TimePickerModal
+        visible={visible}
+        onDismiss={onDismiss}
+        onConfirm={onConfirm}
+        hours={12} // default: current hours
+        minutes={14} // default: current minutes
+        label="Select time" // optional, default 'Select time'
+        cancelLabel="Cancel" // optional, default: 'Cancel'
+        confirmLabel="Ok" // optional, default: 'Ok'
+        animationType="fade" // optional, default is 'none'
+        locale={'en'} // optional, default is automically detected by your system
+      />
+      <Button color="#09253a" style={styles.startTime} icon="walk" onPress={()=> setVisible(true)}>
+        Start: {Hours}:{Minutes}
+      </Button>
+
+      <TimePickerModal
+        visible={finishvisible}
+        onDismiss={onFinishDismiss}
+        onConfirm={onFinishConfirm}
+        hours={12} // default: current hours
+        minutes={14} // default: current minutes
+        label="Select time" // optional, default 'Select time'
+        cancelLabel="Cancel" // optional, default: 'Cancel'
+        confirmLabel="Ok" // optional, default: 'Ok'
+        animationType="fade" // optional, default is 'none'
+        locale={'en'} // optional, default is automically detected by your system
+      />
+      <Button color="#09253a" style={styles.endTime} icon="run" onPress={()=> setfinishVisible(true)}>
+        Finish: {finishHours}:{finishMinutes}
+      </Button>
+      
+      <TimePickerModal
+        visible={Lvisible}
+        onDismiss={onLDismiss}
+        onConfirm={onLConfirm}
+        hours={12} // default: current hours
+        minutes={14} // default: current minutes
+        label="Select time" // optional, default 'Select time'
+        cancelLabel="Cancel" // optional, default: 'Cancel'
+        confirmLabel="Ok" // optional, default: 'Ok'
+        animationType="fade" // optional, default is 'none'
+        locale={'en'} // optional, default is automically detected by your system
+      />
+           <Button color="#09253a" style={styles.startLunch} icon="food" onPress={()=> setLVisible(true)}>
+        Lunch : {LunchHours}:{LunchMinutes}
+      </Button>
+
+      <TimePickerModal
+        visible={Lfinishvisible}
+        onDismiss={onLFinishDismiss}
+        onConfirm={onLFinishConfirm}
+        hours={12} // default: current hours
+        minutes={14} // default: current minutes
+        label="Select time" // optional, default 'Select time'
+        cancelLabel="Cancel" // optional, default: 'Cancel'
+        confirmLabel="Ok" // optional, default: 'Ok'
+        animationType="fade" // optional, default is 'none'
+        locale={'en'} // optional, default is automically detected by your system
+      />
+      <Button color="#09253a" style={styles.endLunch} icon="food" onPress={()=> setLfinishVisible(true)}>
+        Finishes : {finishLunchHours}:{finishLunchMinutes}
+      </Button>
+
+      <TextInput 
+      placeholder="  Description"
+      onChangeText={description => setDescription(description)} 
+      defaultValue={description}
+      style={styles.input}
+      
+      />
+
+
+      <Button color="#09253a" onPress={UpdateContent}>
+              Add
             </Button>
       
           </View>
@@ -329,6 +428,27 @@ const db = DatabaseConnection.getConnection();
             backgroundColor: '#e8dddc',
             borderRadius: 20,
             fontWeight: 'bold'
+           },
+
+           startTime:{
+            marginLeft: -200,
+            width: 140
+           },
+
+           endTime:{
+            marginLeft: 200,
+            marginTop: -38,
+            width: 140
+           },
+
+           startLunch:{
+            marginLeft: -200,
+            width: 140
+           },
+
+           endLunch:{
+            marginLeft: 200,
+            marginTop: -38,
            },
            
          text:{
@@ -366,7 +486,7 @@ const db = DatabaseConnection.getConnection();
       margin: 15,
       height: 40,
       width: 340,
-      borderColor: '#7a42f4',
+      borderColor: "#09253a",
       borderWidth: 2,
       borderRadius: 10
    },
@@ -374,15 +494,24 @@ const db = DatabaseConnection.getConnection();
     marginLeft:20,
     marginTop:10,
     padding:-10,
+    fontWeight:'bold'
     },
 
   pickerStyle: {
-    width:225,
-    marginLeft:5,
+    width:325,
+    marginLeft:-50,
     padding: -15,
     marginTop:35,
     marginRight: -40,
     },
+
+    pickerStyle2: {
+      width:325,
+      marginLeft:-20,
+      padding: -15,
+      marginTop:35,
+      marginRight: -40,
+      },
      });
      
      export default Hour;

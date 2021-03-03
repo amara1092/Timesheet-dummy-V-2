@@ -8,11 +8,17 @@ const db = DatabaseConnection.getConnection();
 
 export default function Home ({ navigation }) {
 
+  
   const [flatListItems, setFlatListItems] = React.useState([]);
   
     const pressHandler = () => 
     {
       navigation.navigate('Hour')
+    }
+
+    const deleteHandler = () => 
+    {
+      navigation.navigate('ViewEntry')
     }
 
     React.useEffect(() => {
@@ -29,6 +35,55 @@ export default function Home ({ navigation }) {
         );
       });
     }, []);
+
+    const renderElement = () => {
+      if(results == null)
+      {
+         return <Text>You have no entries for the week</Text>;
+      }
+
+      else 
+      {
+      <View
+      key={item.id_timesheet}
+      style={{ backgroundColor: '#EEE', marginTop: 20, padding: 30, borderRadius: 10 }}>
+        <Text style={styles.textheader}>UserId</Text>
+        <Text style={styles.textbottom}>{item.user_id}</Text>
+
+        <Text style={styles.textheader}>Week Ending</Text>
+        <Text style={styles.textbottom}>{item.eow}</Text>
+
+        <Text style={styles.textheader}>Date</Text>
+        <Text style={styles.textbottom}>{item.date}</Text>
+
+        <Text style={styles.textheader}>Project Number</Text>
+        <Text style={styles.textbottom}>{item.projNum}</Text>
+
+        <Text style={styles.textheader}>Description</Text>
+        <Text style={styles.textbottom}>{item.comment}</Text>
+
+        <Text style={styles.textheader}>Start Work</Text>
+        <Text style={styles.textbottom}>{item.arrivalHours}:{item.arrivalMinutes}</Text>
+
+        <Text style={styles.textheader}>Finish Work</Text>
+        <Text style={styles.textbottom}>{item.departHours}:{item.departMinutes}</Text>
+
+        <Text style={styles.textheader}>Start Lunch</Text>
+        <Text style={styles.textbottom}>{item.startLHours}:{item.startLMinutes}</Text>
+
+        <Text style={styles.textheader}>Finish Lunch</Text>
+        <Text style={styles.textbottom}>{item.FinishLHours}:{item.FinishLMinutes}</Text>
+
+        <Text style={styles.textheader}>Total Hours</Text>
+        <Text style={styles.textbottom}>{item.totalHrs}</Text>
+
+        <Text style={styles.textheader}>Site ID</Text>
+        <Text style={styles.textbottom}>{item.siteID}</Text>
+
+    </View>
+      }
+      return null;
+   }
 
     const listItemView = (item) => {
       return (
@@ -86,8 +141,13 @@ export default function Home ({ navigation }) {
           />
         </View>
            <Button icon="plus" onPress={pressHandler}>
-                Add Entry
+                Add
            </Button>
+
+           <Button icon="delete" onPress={deleteHandler}>
+                Delete
+           </Button>
+
            </View>
         </SafeAreaView>
    );
